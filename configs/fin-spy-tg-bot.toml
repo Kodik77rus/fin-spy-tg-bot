@@ -1,3 +1,0 @@
-DATABASE_URL = "host=127.0.0.1 user=user password=pwd dbname=database port=5432"
-LOGGER_LVL= "debug"
-TG_BOT = "5030094402:AAHdpBEYJmaGXjM2p9oQE7N1Ozb9p3-bhbA"
