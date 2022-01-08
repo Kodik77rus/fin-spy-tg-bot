@@ -15,7 +15,7 @@ type APP struct {
 	logger  *logrus.Logger   //logger
 	bot     *telegram.Bot    //telegram bot
 	storage *storage.Storage //db
-	Cron    *cron.Cron       //scheduler
+	cron    *cron.Cron       //scheduler
 }
 
 //App constructor
