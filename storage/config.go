@@ -2,8 +2,7 @@ package storage
 
 //storage config
 type Config struct {
-	// Строка подключения к БД
-	DatabaseURL string
+	DatabaseURL string // Строка подключения к БД
 }
 
 //create base  storage config

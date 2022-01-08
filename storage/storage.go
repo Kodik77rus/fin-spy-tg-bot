@@ -8,12 +8,10 @@ import (
 //Instance of storage
 type Storage struct {
 	config *Config
-
-	//orm instance
-	db *gorm.DB
+	db     *gorm.DB //orm instance
 }
 
-//set url from api.config into storage config
+//set url from app.config into storage config
 func New(url string, config *Config) *Storage {
 	config.DatabaseURL = url
 	return &Storage{

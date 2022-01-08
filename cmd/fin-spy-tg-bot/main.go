@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
+	"os"
+	"runtime"
 
 	"github.com/BurntSushi/toml"
-	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/api"
-
-	"log"
+	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/app"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -15,23 +16,28 @@ var (
 
 func init() {
 	//route file path to config file
-	flag.StringVar(&configPath, "path", "../../configs/api.toml", "path to config file in .toml format")
+	flag.StringVar(&configPath, "path", "../../configs/app.toml", "path to config file in .toml format")
 }
 
 func main() {
+	runtime.GOMAXPROCS(4)
+
 	flag.Parse()
 
 	//create base config
-	config := api.NewConfig()
+	config := app.NewConfig()
 
 	_, err := toml.DecodeFile(configPath, config)
 	if err != nil {
-		log.Println("can not find configs file. using default values:", err)
+		logrus.Warnf("Can't find config file! Using default values: %v", err)
 	}
 
 	//set config from toml file
-	server := api.New(config)
+	server := app.New(config)
 
-	//api server start
-	log.Fatal(server.Start())
+	//app server start
+	if err := server.Start(); err != nil {
+		os.Exit(1)
+	}
+
 }
