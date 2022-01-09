@@ -32,7 +32,9 @@ func setLogLevel(app *APP, wg *sync.WaitGroup) error {
 		return err
 	}
 
+	app.logger.SetFormatter(&logrus.JSONFormatter{})
 	app.logger.SetLevel(log_level)
+
 	return nil
 }
 
@@ -59,7 +61,7 @@ func setTgBotApp(app *APP, wg *sync.WaitGroup) error {
 
 	bot.Debug = true
 
-	app.bot = telegram.New(bot)
+	app.bot = telegram.New(bot, app.logger)
 
 	return nil
 }
