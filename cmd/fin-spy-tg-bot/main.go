@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	//route file path to config file
+	//route to the config file
 	flag.StringVar(&configPath, "path", "../../configs/app.toml", "path to config file in .toml format")
 }
 

@@ -46,5 +46,7 @@ func (app *APP) Start() error {
 	wg.Wait()
 
 	app.logger.Info("App working!")
+
+	app.bot.Start()
 	return nil
 }
