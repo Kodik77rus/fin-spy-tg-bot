@@ -1,14 +1,17 @@
 package storage
 
 import (
+	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 //Instance of storage
 type Storage struct {
-	config *Config
-	db     *gorm.DB //orm instance
+	config   *Config
+	db       *gorm.DB //orm instance
+	userRep  *UserRepository
+	assetRep *AssetRepository
 }
 
 //set url from app.config into storage config
@@ -25,6 +28,7 @@ func (storage *Storage) Open() error {
 	if err != nil {
 		return err
 	}
+	db.AutoMigrate(&models.User{}, &models.Watchlist{}, &models.Asset{})
 	storage.db = db
 	return nil
 }
@@ -42,5 +46,21 @@ func (storage *Storage) Close() error {
 		}
 	}
 
+	return nil
+}
+
+//Public repo for Users
+func (s *Storage) User() *UserRepository {
+	s.userRep = &UserRepository{
+		storage: s,
+	}
+	return nil
+}
+
+//Public repo for Assets
+func (s *Storage) Asset() *AssetRepository {
+	s.assetRep = &AssetRepository{
+		storage: s,
+	}
 	return nil
 }
