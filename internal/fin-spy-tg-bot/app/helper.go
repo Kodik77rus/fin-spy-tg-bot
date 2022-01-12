@@ -56,19 +56,12 @@ func setTgBotApp(app *APP, wg *sync.WaitGroup) error {
 	defer wg.Done()
 	bot, err := tgbotapi.NewBotAPI(app.config.TgBot)
 	if err != nil {
-		app.logger.Panicf("Connection to the Telegram API server failed: %v", err)
+		app.logger.Errorf("Connection to the Telegram API server failed: %v", err)
 	}
 
 	bot.Debug = true
 
-	app.bot = telegram.New(bot, app.logger)
+	app.bot = telegram.New(bot, app.storage)
 
-	return nil
-}
-
-func closeDbConnection(app *APP) error {
-	if err := app.storage.Close(); err != nil {
-		app.logger.Panicf("Database connection is not closed: %v", err)
-	}
 	return nil
 }

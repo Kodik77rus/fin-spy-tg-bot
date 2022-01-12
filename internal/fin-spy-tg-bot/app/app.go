@@ -28,7 +28,7 @@ func New(config *Config) *APP {
 
 //Start App
 func (app *APP) Start() error {
-	defer closeDbConnection(app)
+	defer app.storage.Close()
 
 	wg := new(sync.WaitGroup)
 	wg.Add(3)
