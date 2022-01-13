@@ -8,11 +8,9 @@ import (
 
 //Instance of storage
 type Storage struct {
-	config       *Config
-	db           *gorm.DB //orm instance
-	userRep      *UserRepository
-	assetRep     *AssetRepository
-	watchlistRep *Whatchlist
+	config *Config
+	db     *gorm.DB //orm instance
+
 }
 
 //set url from app.config into storage config
@@ -47,38 +45,5 @@ func (storage *Storage) Close() error {
 		}
 	}
 
-	return nil
-}
-
-//Public repo for Users
-func (s *Storage) User() *UserRepository {
-	if s.userRep != nil {
-		return s.userRep
-	}
-	s.userRep = &UserRepository{
-		storage: s,
-	}
-	return nil
-}
-
-//Public repo for Assets
-func (s *Storage) Whatchlist() *Whatchlist {
-	if s.watchlistRep != nil {
-		return s.watchlistRep
-	}
-	s.watchlistRep = &Whatchlist{
-		storage: s,
-	}
-	return nil
-}
-
-//Public repo for Assets
-func (s *Storage) Asset() *AssetRepository {
-	if s.assetRep != nil {
-		return s.assetRep
-	}
-	s.assetRep = &AssetRepository{
-		storage: s,
-	}
 	return nil
 }
