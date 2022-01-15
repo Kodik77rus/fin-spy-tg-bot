@@ -7,10 +7,4 @@ type User struct {
 	Language  string `json:"language_code"`
 }
 
-func NewUser(id uint, un string, l string) *User {
-	return &User{
-		Id:       id,
-		UserName: un,
-		Language: l,
-	}
 }
