@@ -10,7 +10,6 @@ import (
 type Storage struct {
 	config *Config
 	db     *gorm.DB //orm instance
-
 }
 
 //set url from app.config into storage config
@@ -27,7 +26,7 @@ func (storage *Storage) Open() error {
 	if err != nil {
 		return err
 	}
-	db.AutoMigrate(&models.User{}, &models.Watchlist{}, &models.Asset{})
+	db.AutoMigrate(&models.User{}, &models.Watchlist{}, &models.Asset{}, &models.Market{})
 	storage.db = db
 	return nil
 }

@@ -6,5 +6,3 @@ type User struct {
 	UserName  string `json:"first_name"`
 	Language  string `json:"language_code"`
 }
-
-}
