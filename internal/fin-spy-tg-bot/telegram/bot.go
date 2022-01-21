@@ -20,6 +20,28 @@ func New(bot *tgbotapi.BotAPI, storage *storage.Storage) *Bot {
 }
 
 func (b *Bot) Start() error {
-
+	updates := b.initUpdateChanel()
+	b.handleUpdates(updates)
 	return nil
+}
+
+func (b *Bot) initUpdateChanel() tgbotapi.UpdatesChannel {
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+	return b.bot.GetUpdatesChan(u)
+}
+
+func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
+	for update := range updates {
+		if update.CallbackQuery != nil {
+			b.callbackQueryHandler(update.CallbackQuery)
+			continue
+		}
+		if update.Message == nil {
+			continue
+		}
+		if update.Message.IsCommand() {
+			b.handleCommand(update.Message)
+		}
+	}
 }
