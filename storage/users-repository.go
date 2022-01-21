@@ -15,7 +15,7 @@ func (st *Storage) CreateUser(user *models.User) error {
 }
 
 func (st *Storage) FindUser(id uint) (*gorm.DB, error) {
-	result := st.db.First(&user, id)
+	result := st.db.Limit(1).Find(&user, id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
