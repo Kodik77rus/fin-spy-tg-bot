@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	commandStart   = "start"
-	commandMarkets = "markets"
+	commandStart  = "start"
+	commandMarket = "markets"
 	// commandWhatch     = "whatch"
 	// commandDelete     = "delete"
 	// commandWhatchList = "whatchlist"
@@ -29,12 +29,11 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 	switch command[0] {
 	case commandStart:
 		return b.startCommand(message)
-	case commandMarkets:
-
+	case commandMarket:
+		return b.marketCommand(message, command)
 	default:
 		return b.unknownCommand(message)
 	}
-	return nil
 }
 
 //Handle callback querys
@@ -51,21 +50,25 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 
 	switch cb.Data {
 	case ru:
-		if err := b.setUserLanguage(&user); err != nil {
+		//Find user in db and update user language
+		if err := b.storage.UpdateUser(&user); err != nil {
 			return err
 		}
 
 		msg := massegaConstructor(cb.Message, "RU")
+
 		if _, err := b.bot.Send(msg); err != nil {
 			panic(err)
 		}
 
 	case en:
-		if err := b.setUserLanguage(&user); err != nil {
+		//Find user in db and update user language
+		if err := b.storage.UpdateUser(&user); err != nil {
 			return err
 		}
 
 		msg := massegaConstructor(cb.Message, "EN")
+
 		if _, err := b.bot.Send(msg); err != nil {
 			panic(err)
 		}
@@ -128,6 +131,10 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 			panic(err)
 		}
 	}
+	return nil
+}
+
+func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 	return nil
 }
 
