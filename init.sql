@@ -3,7 +3,7 @@ CREATE TABLE marktes
   name text, 
   code text not null,
   mic text PRIMARY KEY,
-  yoohooCode text not null,
+  yahoo_code text not null,
   location text not null,
   country text not null,
   city text not null,
@@ -12,11 +12,11 @@ CREATE TABLE marktes
 );
 
 INSERT INTO
-  marktes(
+  markets(
     name,
     code,
     mic,
-    yoohooCode,
+    yahoo_code,
     location,
     country,
     city,
