@@ -2,14 +2,15 @@ package telegram
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/models"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
-	commandStart = "start"
-	// commandWhatch     = "exchange"
+	commandStart   = "start"
+	commandMarkets = "markets"
 	// commandWhatch     = "whatch"
 	// commandDelete     = "delete"
 	// commandWhatchList = "whatchlist"
@@ -19,42 +20,25 @@ const (
 	en = "en"
 )
 
-var inlineLanguageKeyBoard = tgbotapi.NewInlineKeyboardMarkup(
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(ru, ru),
-		tgbotapi.NewInlineKeyboardButtonData(en, en),
-	),
-)
-
 var user models.User
 
 //Handle commands
 func (b *Bot) handleCommand(message *tgbotapi.Message) error {
-	//message constructor
-	baseMsg := tgbotapi.NewMessage(message.Chat.ID, "base message")
+	command := strings.Split(message.Command(), "_")
 
-	switch message.Command() {
+	switch command[0] {
 	case commandStart:
-		msg, err := b.startCommand(message, &baseMsg)
-		if err != nil {
-			return err
-		}
-		baseMsg = *msg
+		return b.startCommand(message)
+	case commandMarkets:
 
 	default:
 		return b.unknownCommand(message)
-	}
-
-	if _, err := b.bot.Send(baseMsg); err != nil {
-		return err
 	}
 	return nil
 }
 
 //Handle callback querys
 func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
-	msg := tgbotapi.NewMessage(cb.Message.Chat.ID, "base message") // "base message" is crutch
-
 	// Respond to the callback query, telling Telegram to show the user
 	// a message with the data received.
 	callback := tgbotapi.NewCallback(cb.ID, cb.Data)
@@ -67,24 +51,83 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 
 	switch cb.Data {
 	case ru:
-		str, err := b.setUserLanguage(&user)
-		if err != nil {
+		if err := b.setUserLanguage(&user); err != nil {
 			return err
 		}
-		msg.Text = str
+
+		msg := massegaConstructor(cb.Message, "RU")
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+
 	case en:
-		str, err := b.setUserLanguage(&user)
-		if err != nil {
+		if err := b.setUserLanguage(&user); err != nil {
 			return err
 		}
-		msg.Text = str
+
+		msg := massegaConstructor(cb.Message, "EN")
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+	}
+	return nil
+}
+
+//Command start handler
+func (b *Bot) startCommand(message *tgbotapi.Message) error {
+	isUser, err := b.storage.FindUser(uint(message.From.ID))
+	if err != nil {
+		msg := massegaConstructor(message, "troubls with bd")
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+		return err
 	}
 
-	//Send a message containing the data received.
-	if _, err := b.bot.Send(msg); err != nil {
-		panic(err)
+	//if find user
+	if isUser.RowsAffected == 1 {
+		msg := massegaConstructor(message, fmt.Sprintf("Hello %s!", message.From.FirstName))
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+		return nil
 	}
 
+	user.Id = uint(message.From.ID)
+	user.UserName = message.From.FirstName
+	user.Language = message.From.LanguageCode
+
+	switch message.From.LanguageCode {
+	case ru:
+		if err := b.storage.CreateUser(&user); err != nil {
+			return err
+		}
+
+		msg := massegaConstructor(message, "RU")
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+
+		return nil
+	case en:
+		if err := b.storage.CreateUser(&user); err != nil {
+			return err
+		}
+
+		msg := massegaConstructor(message, "RU")
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+
+		return nil
+	default:
+		msg := massegaConstructor(message, "Choose language")
+		msg.ReplyMarkup = inlineLanguageKeyBoard
+
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+	}
 	return nil
 }
 
@@ -96,56 +139,3 @@ func (b *Bot) unknownCommand(message *tgbotapi.Message) error {
 	}
 	return nil
 }
-
-//Command start handler
-func (b *Bot) startCommand(message *tgbotapi.Message, msg *tgbotapi.MessageConfig) (*tgbotapi.MessageConfig, error) {
-	isUser, err := b.storage.FindUser(uint(message.From.ID))
-	if err != nil {
-		msg.Text = "troubls with bd"
-		return msg, err
-	}
-
-	//if find user
-	if isUser.RowsAffected == 1 {
-		msg.Text = fmt.Sprintf("Hello %s!", message.From.FirstName)
-		return msg, nil
-	}
-
-	user.Id = uint(message.From.ID)
-	user.UserName = message.From.FirstName
-	user.Language = message.From.LanguageCode
-
-	switch message.From.LanguageCode {
-	case ru:
-		if err := b.storage.CreateUser(&user); err != nil {
-			return msg, err
-		}
-
-		msg.Text = "RU"
-		return msg, nil
-	case en:
-		if err := b.storage.CreateUser(&user); err != nil {
-			return msg, err
-		}
-
-		msg.Text = "EN"
-		return msg, nil
-	default:
-		msg.ReplyMarkup = inlineLanguageKeyBoard
-		msg.Text = "Choose language"
-	}
-
-	return msg, nil
-}
-
-//fimd user in db and change user language
-func (b *Bot) setUserLanguage(user *models.User) (string, error) {
-	if err := b.storage.UpdateUser(user); err != nil {
-		return "", err
-	}
-	return "you chose language", nil
-}
-
-// func inlineKeyBoardConstructor func () tgbotapi.InlineKeyboardMarkup {
-
-// }
