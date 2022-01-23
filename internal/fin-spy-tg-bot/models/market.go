@@ -3,7 +3,7 @@ package models
 type Market struct {
 	Name      string `json:"name"`
 	Code      string `json:"code"`
-	Mic       string `json:"mic"`
+	Mic       string `json:"mic" gorm:"primaryKey"`
 	YahooCode string `json:"yahooCode"`
 	Location  string `json:"location"`
 	Country   string `json:"country"`

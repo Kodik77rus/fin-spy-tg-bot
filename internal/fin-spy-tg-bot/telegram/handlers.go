@@ -2,13 +2,14 @@ package telegram
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/models"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"strings"
 )
 
 const (
+	//commands
 	commandStart  = "start"
 	commandMarket = "markets"
 	// commandWhatch     = "whatch"
@@ -16,8 +17,14 @@ const (
 	// commandWhatchList = "whatchlist"
 	// commandInfo       = "info"
 
+	//collback message data
 	ru = "ru"
 	en = "en"
+
+	//for pagination
+	marketsCount = 62
+	elemsOnPage  = 3
+	maxPages     = 31
 )
 
 var user models.User
@@ -30,7 +37,7 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 	case commandStart:
 		return b.startCommand(message)
 	case commandMarket:
-		return b.marketCommand(message, command)
+		return b.marketCommand(message, command[1:])
 	default:
 		return b.unknownCommand(message)
 	}
@@ -135,9 +142,9 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
-	switch flags[1] {
+	switch flags[0] {
 	case "show":
-		switch flags[2] {
+		switch flags[1] {
 		case "all":
 			markets, _ := b.storage.GetAllMarkets()
 			for _, m := range markets {
@@ -165,6 +172,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 		default:
 			return b.unknownCommand(message)
 		}
+	case "subscribe":
 	default:
 		return b.unknownCommand(message)
 	}
