@@ -125,7 +125,7 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 		return nil
 	default:
 		msg := massegaConstructor(message, "Choose language")
-		msg.ReplyMarkup = inlineLanguageKeyBoard
+		msg.ReplyMarkup = keyBoardConstructor("", "") //crutch
 
 		if _, err := b.bot.Send(msg); err != nil {
 			panic(err)
@@ -135,6 +135,39 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
+	switch flags[1] {
+	case "show":
+		switch flags[2] {
+		case "all":
+			markets, _ := b.storage.GetAllMarkets()
+			for _, m := range markets {
+				parsedTxt := textParser(m)
+
+				msg := massegaConstructor(message, parsedTxt)
+				msg.ReplyMarkup = keyBoardConstructor("info", m.Hour)
+
+				if _, err := b.bot.Send(msg); err != nil {
+					panic(err)
+				}
+			}
+			return nil
+		case "code":
+
+		case "mic":
+
+		case "location":
+
+		case "country":
+
+		case "city":
+
+		case "delay":
+		default:
+			return b.unknownCommand(message)
+		}
+	default:
+		return b.unknownCommand(message)
+	}
 	return nil
 }
 
