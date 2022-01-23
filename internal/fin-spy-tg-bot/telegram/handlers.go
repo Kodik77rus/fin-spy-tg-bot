@@ -20,11 +20,6 @@ const (
 	//collback message data
 	ru = "ru"
 	en = "en"
-
-	//for pagination
-	marketsCount = 62
-	elemsOnPage  = 3
-	maxPages     = 31
 )
 
 var user models.User
@@ -132,7 +127,7 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 		return nil
 	default:
 		msg := massegaConstructor(message, "Choose language")
-		msg.ReplyMarkup = keyBoardConstructor("", "") //crutch
+		msg.ReplyMarkup = inlineKeyBoardConstructor("", "") //crutch
 
 		if _, err := b.bot.Send(msg); err != nil {
 			panic(err)
@@ -146,13 +141,11 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 	case "show":
 		switch flags[1] {
 		case "all":
-			markets, _ := b.storage.GetAllMarkets()
+			markets, _ := b.storage.GetAllMarkets(1) //firts page
 			for _, m := range markets {
 				parsedTxt := textParser(m)
-
 				msg := massegaConstructor(message, parsedTxt)
-				msg.ReplyMarkup = keyBoardConstructor("info", m.Hour)
-
+				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
 				if _, err := b.bot.Send(msg); err != nil {
 					panic(err)
 				}

@@ -7,27 +7,6 @@ import (
 	"text/template"
 )
 
-func keyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboardMarkup {
-	switch text {
-	case "info":
-		keyBoard := tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL(text, data),
-			),
-		)
-		return &keyBoard
-	default:
-		keyBoard := tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(ru, ru),
-				tgbotapi.NewInlineKeyboardButtonData(en, en),
-			),
-		)
-		return &keyBoard
-
-	}
-}
-
 func massegaConstructor(message *tgbotapi.Message, text string) *tgbotapi.MessageConfig {
 	msg := tgbotapi.NewMessage(message.Chat.ID, text)
 	return &msg
@@ -67,4 +46,24 @@ func marketParser(m models.Market) (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboardMarkup {
+	switch text {
+	case "info":
+		keyBoard := tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonURL(text, data),
+			),
+		)
+		return &keyBoard
+	default:
+		keyBoard := tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(ru, ru),
+				tgbotapi.NewInlineKeyboardButtonData(en, en),
+			),
+		)
+		return &keyBoard
+	}
 }
