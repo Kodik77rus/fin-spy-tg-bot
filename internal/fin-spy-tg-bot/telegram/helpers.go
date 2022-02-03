@@ -2,14 +2,42 @@ package telegram
 
 import (
 	"bytes"
+	"strconv"
+	"strings"
+	"text/template"
+
 	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/models"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"text/template"
 )
 
-func massegaConstructor(message *tgbotapi.Message, text string) *tgbotapi.MessageConfig {
-	msg := tgbotapi.NewMessage(message.Chat.ID, text)
-	return &msg
+var querys = [1]string{"all_markets"}
+
+type Pagination struct {
+	isValid bool
+	query   string
+	page    int
+}
+
+func paginationParser(params []string) *Pagination {
+	pageNumber := strings.Split(params[0], "=")
+
+	i, err := strconv.Atoi(pageNumber[1])
+	if err != nil {
+		return &Pagination{isValid: false}
+	}
+
+	query := strings.Split(params[1], "=")
+	for _, q := range querys {
+		if isGood := strings.Compare(q, query[1]); isGood == 0 {
+			return &Pagination{
+				isValid: true,
+				query:   query[1],
+				page:    i,
+			}
+		}
+	}
+
+	return &Pagination{isValid: false}
 }
 
 func textParser(i interface{}) string {
@@ -48,12 +76,24 @@ func marketParser(m models.Market) (string, error) {
 	return buf.String(), nil
 }
 
+func massegaConstructor(message *tgbotapi.Message, text string) *tgbotapi.MessageConfig {
+	msg := tgbotapi.NewMessage(message.Chat.ID, text)
+	return &msg
+}
+
 func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboardMarkup {
 	switch text {
 	case "info":
 		keyBoard := tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonURL(text, data),
+			),
+		)
+		return &keyBoard
+	case "next":
+		keyBoard := tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(strings.Title(text), data),
 			),
 		)
 		return &keyBoard
@@ -66,4 +106,5 @@ func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboar
 		)
 		return &keyBoard
 	}
+
 }
