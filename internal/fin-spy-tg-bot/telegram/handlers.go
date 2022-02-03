@@ -18,8 +18,9 @@ const (
 	// commandInfo       = "info"
 
 	//collback message data
-	ru = "ru"
-	en = "en"
+	ru   = "ru"
+	en   = "en"
+	page = "page"
 )
 
 var user models.User
@@ -50,7 +51,8 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 	user.Id = uint(cb.Message.Chat.ID)
 	user.Language = cb.Data
 
-	switch cb.Data {
+	data := strings.Split(cb.Data, "=")
+	switch data[0] {
 	case ru:
 		//Find user in db and update user language
 		if err := b.storage.UpdateUser(&user); err != nil {
@@ -74,6 +76,47 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 		if _, err := b.bot.Send(msg); err != nil {
 			panic(err)
 		}
+	case page:
+		params := strings.Split(cb.Data, ",")
+
+		p := paginationParser(params)
+		if !p.isValid {
+			msg := massegaConstructor(cb.Message, "Bad query")
+			if _, err := b.bot.Send(msg); err != nil {
+				panic(err)
+			}
+		}
+
+		switch p.query {
+		case "all_markets":
+			markets, _ := b.storage.GetAllMarkets(p.page + 1) //next page
+			if markets.Count == 0 {
+				msg := massegaConstructor(cb.Message, "You watched all markets!")
+				if _, err := b.bot.Send(msg); err != nil {
+					panic(err)
+				}
+				return nil
+			}
+
+			for _, m := range markets.Markets {
+				parsedTxt := textParser(m)
+
+				msg := massegaConstructor(cb.Message, parsedTxt)
+				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
+
+				if _, err := b.bot.Send(msg); err != nil {
+					panic(err)
+				}
+			}
+			msg := massegaConstructor(cb.Message, "Touch to see next markets")
+			msg.ReplyMarkup = inlineKeyBoardConstructor("next", fmt.Sprintf("page=%d,query=%s", p.page+1, p.query))
+			if _, err := b.bot.Send(msg); err != nil {
+				panic(err)
+			}
+			return nil
+		}
+	default:
+		return b.unknownCommand(cb.Message)
 	}
 	return nil
 }
@@ -142,13 +185,18 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 		switch flags[1] {
 		case "all":
 			markets, _ := b.storage.GetAllMarkets(1) //firts page
-			for _, m := range markets {
+			for _, m := range markets.Markets {
 				parsedTxt := textParser(m)
 				msg := massegaConstructor(message, parsedTxt)
 				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
 				if _, err := b.bot.Send(msg); err != nil {
 					panic(err)
 				}
+			}
+			msg := massegaConstructor(message, "Touch to see next markets")
+			msg.ReplyMarkup = inlineKeyBoardConstructor("next", "page=1,query=all_markets")
+			if _, err := b.bot.Send(msg); err != nil {
+				panic(err)
 			}
 			return nil
 		case "code":

@@ -106,5 +106,4 @@ func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboar
 		)
 		return &keyBoard
 	}
-
 }
