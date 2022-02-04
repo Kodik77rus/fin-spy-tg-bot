@@ -107,3 +107,12 @@ func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboar
 		return &keyBoard
 	}
 }
+
+//Send default message for unknown command
+func (b *Bot) unknownMessage(message *tgbotapi.Message) error {
+	msg := tgbotapi.NewMessage(message.Chat.ID, "Silly bot Finn don't understant you!")
+	if _, err := b.bot.Send(msg); err != nil {
+		panic(err)
+	}
+	return nil
+}
