@@ -3,7 +3,6 @@ package telegram
 import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
 	"strings"
 )
 
@@ -34,18 +33,8 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 
 //Command start handler
 func (b *Bot) startCommand(message *tgbotapi.Message) error {
-
-	isUser, err := b.storage.FindUser(uint(message.From.ID))
-	if err != nil {
-		msg := massegaConstructor(message, "troubls with bd")
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return err
-	}
-
-	//if find user
-	if isUser.RowsAffected == 1 {
+	isUser, _ := b.storage.FindUser(uint(message.From.ID))
+	if isUser.RowsAffected == 1 { //if find user
 		msg := massegaConstructor(message, fmt.Sprintf("Hello %s!", message.From.FirstName))
 		if _, err := b.bot.Send(msg); err != nil {
 			panic(err)
@@ -55,18 +44,12 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 
 	switch message.From.LanguageCode {
 	case ru:
-		return b.findUser(message, b.config.RuDictionary)
+		return b.createUser(message, b.config.RuDictionary)
 	case en:
-		return b.findUser(message, b.config.EnDictionary)
+		return b.createUser(message, b.config.EnDictionary)
 	default:
-		msg := massegaConstructor(message, "Choose language")
-		msg.ReplyMarkup = inlineKeyBoardConstructor("", "") //crutch
-
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
+		return b.chooseLanguage(message, b.config.EnDictionary)
 	}
-	return nil
 }
 
 func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
@@ -75,6 +58,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 		switch flags[1] {
 		case "all":
 			markets, _ := b.storage.GetAllMarkets(1) //firts page
+
 			for _, m := range markets.Markets {
 				parsedTxt := textParser(m)
 				msg := massegaConstructor(message, parsedTxt)
@@ -93,12 +77,6 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 
 		case "mic":
 
-		case "location":
-
-		case "country":
-
-		case "city":
-
 		case "delay":
 		default:
 			return b.unknownMessage(message)
@@ -110,7 +88,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 	return nil
 }
 
-func (b *Bot) findUser(message *tgbotapi.Message, dictionary interface{}) error {
+func (b *Bot) createUser(message *tgbotapi.Message, dictionary interface{}) error {
 	user.Id = uint(message.From.ID)
 	user.UserName = message.From.FirstName
 	user.Language = message.From.LanguageCode
@@ -118,7 +96,7 @@ func (b *Bot) findUser(message *tgbotapi.Message, dictionary interface{}) error 
 	switch d := dictionary.(type) {
 	case RuDictionary:
 		//Find user in db and update user language
-		if err := b.storage.CreateUser(&user); err != nil {
+		if err := b.storage.CreateUser(&user); err != nil { //
 			return err
 		}
 
@@ -128,7 +106,7 @@ func (b *Bot) findUser(message *tgbotapi.Message, dictionary interface{}) error 
 		}
 		return nil
 	case EnDictionary:
-		if err := b.storage.CreateUser(&user); err != nil {
+		if err := b.storage.CreateUser(&user); err != nil { //
 			return err
 		}
 
@@ -137,6 +115,16 @@ func (b *Bot) findUser(message *tgbotapi.Message, dictionary interface{}) error 
 			panic(err)
 		}
 		return nil
+	}
+	return nil
+}
+
+func (b *Bot) chooseLanguage(message *tgbotapi.Message, dictionary interface{}) error {
+	msg := massegaConstructor(message, "Choose language")
+	msg.ReplyMarkup = inlineKeyBoardConstructor("", "") //crutch
+
+	if _, err := b.bot.Send(msg); err != nil {
+		panic(err)
 	}
 	return nil
 }
