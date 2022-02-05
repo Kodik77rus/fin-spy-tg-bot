@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 	"strings"
 	"text/template"
@@ -10,13 +11,24 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var buf bytes.Buffer
 var querys = [1]string{"all_markets"}
 
 type Pagination struct {
 	isValid bool
 	query   string
 	page    int
+}
+
+type location struct {
+	location *[]string
+}
+
+type country struct {
+	country *[]string
+}
+
+type city struct {
+	city *[]string
 }
 
 func paginationParser(params []string) *Pagination {
@@ -41,19 +53,31 @@ func paginationParser(params []string) *Pagination {
 	return &Pagination{isValid: false}
 }
 
-func textParser(i interface{}) string {
+func textParser(i interface{}) *string {
 	switch i := i.(type) {
 	case models.Market:
-		msg, err := marketParser(i)
+		txt, err := marketParser(i)
 		if err != nil {
 			panic(err)
 		}
-		return msg
+		fmt.Printf("33333333333333333 %v", txt)
+		return &txt
+	case location:
+		txt := geoParser(i.location, "country")
+		return txt
+	case country:
+		txt := geoParser(i.country, "country")
+		return txt
+	case city:
+		txt := geoParser(i.city, "country")
+		return txt
 	}
-	return ""
+	return nil
 }
 
 func marketParser(m models.Market) (string, error) {
+	var buf bytes.Buffer
+
 	ut, err := template.New("market").
 		Parse(
 			"Name: {{ .Name }}\n" +
@@ -74,6 +98,14 @@ func marketParser(m models.Market) (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+func geoParser(location *[]string, param string) *string {
+	str := new(string)
+	for _, c := range *location {
+		*str += fmt.Sprintf("%s:\n/markets_show_%s_%s\n", c, param, c)
+	}
+	return str
 }
 
 func massegaConstructor(message *tgbotapi.Message, text string) *tgbotapi.MessageConfig {

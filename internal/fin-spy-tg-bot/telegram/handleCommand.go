@@ -2,8 +2,9 @@ package telegram
 
 import (
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
@@ -55,13 +56,25 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 	switch flags[0] {
 	case "show":
+		if len(flags) == 3 && flags[1] == "all" {
+			switch flags[2] {
+			case "locations":
+				return b.findMarketsWithParam(message, "location")
+			case "countries":
+				return b.findMarketsWithParam(message, "country")
+			case "cities":
+				return b.findMarketsWithParam(message, "city")
+			default:
+				return b.unknownMessage(message)
+			}
+		}
+
 		switch flags[1] {
 		case "all":
 			markets, _ := b.storage.GetAllMarkets(1) //firts page
 
 			for _, m := range markets.Markets {
-				parsedTxt := textParser(m)
-				msg := massegaConstructor(message, parsedTxt)
+				msg := massegaConstructor(message, *textParser(m))
 				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
 				if _, err := b.bot.Send(msg); err != nil {
 					panic(err)
@@ -125,6 +138,45 @@ func (b *Bot) chooseLanguage(message *tgbotapi.Message, dictionary interface{}) 
 
 	if _, err := b.bot.Send(msg); err != nil {
 		panic(err)
+	}
+	return nil
+}
+
+func (b *Bot) findMarketsWithParam(message *tgbotapi.Message, param string) error {
+	res, _ := b.storage.FindMarketsWithParam(param)
+	switch param {
+	case "location":
+		var location location
+
+		location.location = res
+
+		msg := massegaConstructor(message, *textParser(location))
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+		return nil
+	case "country":
+		var country country
+
+		country.country = res
+
+		msg := massegaConstructor(message, *textParser(country))
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+		return nil
+
+	// 	return nil
+	case "city":
+		var city city
+
+		city.city = res
+
+		msg := massegaConstructor(message, *textParser(city))
+		if _, err := b.bot.Send(msg); err != nil {
+			panic(err)
+		}
+		return nil
 	}
 	return nil
 }
