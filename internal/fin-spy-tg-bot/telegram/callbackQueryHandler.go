@@ -55,9 +55,7 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 			}
 
 			for _, m := range markets.Markets {
-				parsedTxt := textParser(m)
-
-				msg := massegaConstructor(cb.Message, parsedTxt)
+				msg := massegaConstructor(cb.Message, *textParser(m))
 				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
 
 				if _, err := b.bot.Send(msg); err != nil {

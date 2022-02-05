@@ -6,7 +6,7 @@ import (
 
 const pageSize = 2
 
-var market []string
+var market *[]string
 var markets []models.Market
 
 type MarketResponse struct {
@@ -40,7 +40,7 @@ func (st *Storage) GetAllMarkets(page int) (*MarketResponse, error) {
 	return &response, nil
 }
 
-func (st *Storage) FindMarketsWithParam(param string) ([]string, error) {
+func (st *Storage) FindMarketsWithParam(param string) (*[]string, error) {
 	result := st.db.
 		Model(&models.Market{}).
 		Distinct().
