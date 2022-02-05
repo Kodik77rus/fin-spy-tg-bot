@@ -77,13 +77,13 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 	return nil
 }
 
+//Find user in db and update user language
 func (b *Bot) setUserLanguage(cb *tgbotapi.CallbackQuery, dictionary interface{}) error {
 	user.Id = uint(cb.Message.Chat.ID)
 	user.Language = cb.Data
 
 	switch d := dictionary.(type) {
 	case RuDictionary:
-		//Find user in db and update user language
 		if err := b.storage.UpdateUser(&user); err != nil {
 			return err
 		}

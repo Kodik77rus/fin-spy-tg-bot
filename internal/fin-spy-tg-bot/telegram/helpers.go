@@ -10,6 +10,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+var buf bytes.Buffer
 var querys = [1]string{"all_markets"}
 
 type Pagination struct {
@@ -53,17 +54,16 @@ func textParser(i interface{}) string {
 }
 
 func marketParser(m models.Market) (string, error) {
-	var buf bytes.Buffer
-
-	ut, err := template.New("market").Parse(
-		"Name: {{ .Name }}\n" +
-			"Code: {{ .Code }}\n" +
-			"Mic: {{ .Mic }}\n" +
-			"Location: {{ .Location }}\n" +
-			"Country: {{ .Country }}\n" +
-			"City: {{ .City }}\n" +
-			"Delay: {{ .Delay }} min\n",
-	)
+	ut, err := template.New("market").
+		Parse(
+			"Name: {{ .Name }}\n" +
+				"Code: {{ .Code }}\n" +
+				"Mic: {{ .Mic }}\n" +
+				"Location: {{ .Location }}\n" +
+				"Country: {{ .Country }}\n" +
+				"City: {{ .City }}\n" +
+				"Delay: {{ .Delay }} min\n",
+		)
 	if err != nil {
 		return "", err
 	}
