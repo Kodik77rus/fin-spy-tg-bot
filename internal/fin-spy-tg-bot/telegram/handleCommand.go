@@ -83,7 +83,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 				}
 			}
 
-			pagination.page = 1 //crutch
+			pagination.page = 1
 			pagination.query = "all_markets"
 
 			return b.paginationMessage(message, &pagination)
