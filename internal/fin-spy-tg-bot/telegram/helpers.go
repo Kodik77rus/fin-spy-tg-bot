@@ -31,6 +31,27 @@ type city struct {
 	city *[]string
 }
 
+func textParser(i interface{}) *string {
+	switch i := i.(type) {
+	case models.Market:
+		txt, err := marketParser(i)
+		if err != nil {
+			panic(err)
+		}
+		return &txt
+	case location:
+		txt := geoParser(i.location, "location")
+		return txt
+	case country:
+		txt := geoParser(i.country, "country")
+		return txt
+	case city:
+		txt := geoParser(i.city, "city")
+		return txt
+	}
+	return nil
+}
+
 func paginationParser(params []string) *pagination {
 	pageNumber := strings.Split(params[0], "=")
 
@@ -51,27 +72,6 @@ func paginationParser(params []string) *pagination {
 	}
 
 	return &pagination{isValid: false}
-}
-
-func textParser(i interface{}) *string {
-	switch i := i.(type) {
-	case models.Market:
-		txt, err := marketParser(i)
-		if err != nil {
-			panic(err)
-		}
-		return &txt
-	case location:
-		txt := geoParser(i.location, "location")
-		return txt
-	case country:
-		txt := geoParser(i.country, "country")
-		return txt
-	case city:
-		txt := geoParser(i.city, "city")
-		return txt
-	}
-	return nil
 }
 
 func marketParser(m models.Market) (string, error) {
