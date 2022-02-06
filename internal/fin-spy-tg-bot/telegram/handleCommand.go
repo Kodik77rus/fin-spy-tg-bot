@@ -37,10 +37,7 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 	isUser, _ := b.storage.FindUser(uint(message.From.ID))
 	if isUser.RowsAffected == 1 { //if find user
 		msg := massegaConstructor(message, fmt.Sprintf("Hello %s!", message.From.FirstName))
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return nil
+		return b.sendMessage(msg)
 	}
 
 	switch message.From.LanguageCode {
@@ -49,7 +46,7 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 	case en:
 		return b.createUser(message, b.config.EnDictionary)
 	default:
-		return b.chooseLanguage(message, b.config.EnDictionary)
+		return b.chooseLanguageMessage(message, b.config.EnDictionary)
 	}
 }
 
@@ -78,9 +75,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 			for _, m := range markets.Markets {
 				msg := massegaConstructor(message, *textParser(m))
 				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
-				if _, err := b.bot.Send(msg); err != nil {
-					panic(err)
-				}
+				b.sendMessage(msg)
 			}
 
 			pagination.page = 1
@@ -115,36 +110,30 @@ func (b *Bot) createUser(message *tgbotapi.Message, dictionary interface{}) erro
 		}
 
 		msg := massegaConstructor(message, fmt.Sprintf("%s, %s", message.From.FirstName, d.startMessage))
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return nil
+		return b.sendMessage(msg)
 	case EnDictionary:
 		if err := b.storage.CreateUser(&user); err != nil { //
 			return err
 		}
 
 		msg := massegaConstructor(message, fmt.Sprintf("%s, %s", message.From.FirstName, d.startMessage))
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return nil
+		return b.sendMessage(msg)
 	}
 	return nil
 }
 
-func (b *Bot) chooseLanguage(message *tgbotapi.Message, dictionary interface{}) error {
+func (b *Bot) chooseLanguageMessage(message *tgbotapi.Message, dictionary interface{}) error {
 	msg := massegaConstructor(message, "Choose language")
 	msg.ReplyMarkup = inlineKeyBoardConstructor("", "") //crutch
-
-	if _, err := b.bot.Send(msg); err != nil {
-		panic(err)
-	}
-	return nil
+	return b.sendMessage(msg)
 }
 
 func (b *Bot) findMarketsWithParam(message *tgbotapi.Message, param string) error {
-	res, _ := b.storage.FindMarketsWithParam(param)
+	res, err := b.storage.FindMarketsWithParam(param)
+	if err != nil {
+		return err
+	}
+
 	switch param {
 	case "location":
 		var location location
@@ -152,32 +141,23 @@ func (b *Bot) findMarketsWithParam(message *tgbotapi.Message, param string) erro
 		location.location = res
 
 		msg := massegaConstructor(message, *textParser(location))
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return nil
+		return b.sendMessage(msg)
 	case "country":
 		var country country
 
 		country.country = res
 
 		msg := massegaConstructor(message, *textParser(country))
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return nil
-
-	// 	return nil
+		return b.sendMessage(msg)
 	case "city":
 		var city city
 
 		city.city = res
 
 		msg := massegaConstructor(message, *textParser(city))
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return nil
+		return b.sendMessage(msg)
+	default:
+		b.unknownMessage(message)
 	}
 	return nil
 }

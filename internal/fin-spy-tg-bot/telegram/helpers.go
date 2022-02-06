@@ -143,10 +143,7 @@ func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboar
 //Send default message for unknown command
 func (b *Bot) unknownMessage(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, "Silly bot Finn don't understant you!")
-	if _, err := b.bot.Send(msg); err != nil {
-		panic(err)
-	}
-	return nil
+	return b.sendMessage(&msg)
 }
 
 func (b *Bot) paginationMessage(message *tgbotapi.Message, p *pagination) error {
@@ -155,6 +152,10 @@ func (b *Bot) paginationMessage(message *tgbotapi.Message, p *pagination) error 
 		fmt.Sprintf("next page %d", p.page+1),
 		fmt.Sprintf("page=%d,query=%s", p.page+1, p.query),
 	)
+	return b.sendMessage(msg)
+}
+
+func (b *Bot) sendMessage(msg *tgbotapi.MessageConfig) error {
 	if _, err := b.bot.Send(msg); err != nil {
 		panic(err)
 	}

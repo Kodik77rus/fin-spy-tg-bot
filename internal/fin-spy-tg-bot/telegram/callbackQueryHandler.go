@@ -38,9 +38,7 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 		p := paginationParser(params)
 		if !p.isValid {
 			msg := massegaConstructor(cb.Message, "Bad query")
-			if _, err := b.bot.Send(msg); err != nil {
-				panic(err)
-			}
+			return b.sendMessage(msg)
 		}
 
 		switch p.query {
@@ -48,19 +46,14 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 			markets, _ := b.storage.GetAllMarkets(p.page + 1) //next page
 			if markets.Count == 0 {
 				msg := massegaConstructor(cb.Message, "You watched all markets!")
-				if _, err := b.bot.Send(msg); err != nil {
-					panic(err)
-				}
-				return nil
+				return b.sendMessage(msg)
 			}
 
 			for _, m := range markets.Markets {
 				msg := massegaConstructor(cb.Message, *textParser(m))
 				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
 
-				if _, err := b.bot.Send(msg); err != nil {
-					panic(err)
-				}
+				b.sendMessage(msg)
 			}
 			return b.paginationMessage(cb.Message, p)
 		}
@@ -81,21 +74,13 @@ func (b *Bot) setUserLanguage(cb *tgbotapi.CallbackQuery, dictionary interface{}
 			return err
 		}
 		msg := massegaConstructor(cb.Message, fmt.Sprintf("%s, %s", cb.Message.From.FirstName, d.setLanguage))
-
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return nil
+		return b.sendMessage(msg)
 	case EnDictionary:
 		if err := b.storage.UpdateUser(&user); err != nil {
 			return err
 		}
 		msg := massegaConstructor(cb.Message, fmt.Sprintf("%s, %s", cb.Message.From.FirstName, d.setLanguage))
-
-		if _, err := b.bot.Send(msg); err != nil {
-			panic(err)
-		}
-		return nil
+		return b.sendMessage(msg)
 	}
 	return nil
 }
