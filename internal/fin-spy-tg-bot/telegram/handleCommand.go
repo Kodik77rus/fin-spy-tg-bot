@@ -81,7 +81,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 				}
 			}
 			msg := massegaConstructor(message, "Touch to see next markets")
-			msg.ReplyMarkup = inlineKeyBoardConstructor("next", "page=1,query=all_markets")
+			msg.ReplyMarkup = inlineKeyBoardConstructor("next page 2", "page=1,query=all_markets")
 			if _, err := b.bot.Send(msg); err != nil {
 				panic(err)
 			}

@@ -60,7 +60,6 @@ func textParser(i interface{}) *string {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("33333333333333333 %v", txt)
 		return &txt
 	case location:
 		txt := geoParser(i.location, "country")
@@ -114,7 +113,8 @@ func massegaConstructor(message *tgbotapi.Message, text string) *tgbotapi.Messag
 }
 
 func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboardMarkup {
-	switch text {
+	param := strings.Split(text, " ")
+	switch param[0] {
 	case "info":
 		keyBoard := tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(

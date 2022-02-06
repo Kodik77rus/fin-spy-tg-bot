@@ -63,7 +63,11 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 				}
 			}
 			msg := massegaConstructor(cb.Message, "Touch to see next markets")
-			msg.ReplyMarkup = inlineKeyBoardConstructor("next", fmt.Sprintf("page=%d,query=%s", p.page+1, p.query))
+
+			msg.ReplyMarkup = inlineKeyBoardConstructor(
+				fmt.Sprintf("next page %d", p.page+1), //fix
+				fmt.Sprintf("page=%d,query=%s", p.page+1, p.query),
+			)
 			if _, err := b.bot.Send(msg); err != nil {
 				panic(err)
 			}
