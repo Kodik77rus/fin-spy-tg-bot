@@ -62,13 +62,13 @@ func textParser(i interface{}) *string {
 		}
 		return &txt
 	case location:
-		txt := geoParser(i.location, "country")
+		txt := geoParser(i.location, "location")
 		return txt
 	case country:
 		txt := geoParser(i.country, "country")
 		return txt
 	case city:
-		txt := geoParser(i.city, "country")
+		txt := geoParser(i.city, "city")
 		return txt
 	}
 	return nil
