@@ -36,8 +36,7 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 func (b *Bot) startCommand(message *tgbotapi.Message) error {
 	isUser, _ := b.storage.FindUser(uint(message.From.ID))
 	if isUser.RowsAffected == 1 { //if find user
-		msg := massegaConstructor(message, fmt.Sprintf("Hello %s!", message.From.FirstName))
-		return b.sendMessage(msg)
+		return b.helloMessage(message)
 	}
 
 	switch message.From.LanguageCode {
@@ -120,12 +119,6 @@ func (b *Bot) createUser(message *tgbotapi.Message, dictionary interface{}) erro
 		return b.sendMessage(msg)
 	}
 	return nil
-}
-
-func (b *Bot) chooseLanguageMessage(message *tgbotapi.Message, dictionary interface{}) error {
-	msg := massegaConstructor(message, "Choose language")
-	msg.ReplyMarkup = inlineKeyBoardConstructor("", "") //crutch
-	return b.sendMessage(msg)
 }
 
 func (b *Bot) findMarketsWithParam(message *tgbotapi.Message, param string) error {

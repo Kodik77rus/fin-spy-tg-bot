@@ -155,6 +155,17 @@ func (b *Bot) paginationMessage(message *tgbotapi.Message, p *pagination) error 
 	return b.sendMessage(msg)
 }
 
+func (b *Bot) chooseLanguageMessage(message *tgbotapi.Message, dictionary interface{}) error {
+	msg := massegaConstructor(message, "Choose language")
+	msg.ReplyMarkup = inlineKeyBoardConstructor("", "") //crutch
+	return b.sendMessage(msg)
+}
+
+func (b *Bot) helloMessage(message *tgbotapi.Message) error {
+	msg := massegaConstructor(message, fmt.Sprintf("Hello %s!", message.From.FirstName))
+	return b.sendMessage(msg)
+}
+
 func (b *Bot) sendMessage(msg *tgbotapi.MessageConfig) error {
 	if _, err := b.bot.Send(msg); err != nil {
 		panic(err)
