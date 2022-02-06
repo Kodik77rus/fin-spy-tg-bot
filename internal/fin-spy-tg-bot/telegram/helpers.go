@@ -13,7 +13,7 @@ import (
 
 var querys = [1]string{"all_markets"}
 
-type Pagination struct {
+type pagination struct {
 	isValid bool
 	query   string
 	page    int
@@ -31,18 +31,18 @@ type city struct {
 	city *[]string
 }
 
-func paginationParser(params []string) *Pagination {
+func paginationParser(params []string) *pagination {
 	pageNumber := strings.Split(params[0], "=")
 
 	i, err := strconv.Atoi(pageNumber[1])
 	if err != nil {
-		return &Pagination{isValid: false}
+		return &pagination{isValid: false}
 	}
 
 	query := strings.Split(params[1], "=")
 	for _, q := range querys {
 		if isGood := strings.Compare(q, query[1]); isGood == 0 {
-			return &Pagination{
+			return &pagination{
 				isValid: true,
 				query:   query[1],
 				page:    i,
@@ -50,7 +50,7 @@ func paginationParser(params []string) *Pagination {
 		}
 	}
 
-	return &Pagination{isValid: false}
+	return &pagination{isValid: false}
 }
 
 func textParser(i interface{}) *string {
@@ -143,6 +143,18 @@ func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboar
 //Send default message for unknown command
 func (b *Bot) unknownMessage(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, "Silly bot Finn don't understant you!")
+	if _, err := b.bot.Send(msg); err != nil {
+		panic(err)
+	}
+	return nil
+}
+
+func (b *Bot) paginationMessage(message *tgbotapi.Message, p *pagination) error {
+	msg := massegaConstructor(message, "Touch to see next markets")
+	msg.ReplyMarkup = inlineKeyBoardConstructor(
+		fmt.Sprintf("next page %d", p.page+1),
+		fmt.Sprintf("page=%d,query=%s", p.page+1, p.query),
+	)
 	if _, err := b.bot.Send(msg); err != nil {
 		panic(err)
 	}

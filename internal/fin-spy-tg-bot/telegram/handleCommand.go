@@ -71,6 +71,8 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 
 		switch flags[1] {
 		case "all":
+			var pagination pagination
+
 			markets, _ := b.storage.GetAllMarkets(1) //firts page
 
 			for _, m := range markets.Markets {
@@ -80,17 +82,16 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 					panic(err)
 				}
 			}
-			msg := massegaConstructor(message, "Touch to see next markets")
-			msg.ReplyMarkup = inlineKeyBoardConstructor("next page 2", "page=1,query=all_markets")
-			if _, err := b.bot.Send(msg); err != nil {
-				panic(err)
-			}
-			return nil
-		case "code":
 
-		case "mic":
+			pagination.page = 1 //crutch
+			pagination.query = "all_markets"
 
-		case "delay":
+			return b.paginationMessage(message, &pagination)
+		case "location":
+
+		case "country":
+
+		case "city":
 		default:
 			return b.unknownMessage(message)
 		}
