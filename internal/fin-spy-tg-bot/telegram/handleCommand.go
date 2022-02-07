@@ -67,7 +67,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 
 		switch flags[1] {
 		case "all":
-			var pagination pagination
+			var pagination Pagination
 
 			markets, _ := b.storage.GetAllMarkets(1) //firts page
 
@@ -81,19 +81,37 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 			pagination.query = "all_markets"
 
 			return b.paginationMessage(message, &pagination)
-		case "location":
+		case "location", "country", "city":
+			var p Pagination
 
-		case "country":
+			p.page = 1
+			p.query = flags[1]
+			p.queryData = parseQuery(flags[2:])
 
-		case "city":
+			markets, _ := b.storage.FindMarketsWithGeoParams(p.query, p.queryData, 1)
+			if markets.Count == 0 {
+				msg := massegaConstructor(message, "Markets not found")
+				b.sendMessage(msg)
+				return nil
+			}
+
+			for _, m := range markets.Markets {
+				msg := massegaConstructor(message, *textParser(m))
+				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
+				b.sendMessage(msg)
+			}
+
+			if markets.Count == 1 {
+				return nil
+			}
+
+			return b.paginationMessage(message, &p)
 		default:
 			return b.unknownMessage(message)
 		}
-	case "subscribe":
 	default:
 		return b.unknownMessage(message)
 	}
-	return nil
 }
 
 func (b *Bot) createUser(message *tgbotapi.Message, dictionary interface{}) error {

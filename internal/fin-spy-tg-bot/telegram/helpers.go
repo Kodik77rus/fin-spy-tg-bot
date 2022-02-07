@@ -11,12 +11,13 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var querys = [1]string{"all_markets"}
+var querys = [4]string{"all_markets", "location", "country", "city"}
 
-type pagination struct {
-	isValid bool
-	query   string
-	page    int
+type Pagination struct {
+	isValid   bool
+	query     string
+	queryData string
+	page      int
 }
 
 type location struct {
@@ -52,26 +53,29 @@ func textParser(i interface{}) *string {
 	return nil
 }
 
-func paginationParser(params []string) *pagination {
+func paginationParser(params []string) *Pagination {
 	pageNumber := strings.Split(params[0], "=")
 
 	i, err := strconv.Atoi(pageNumber[1])
 	if err != nil {
-		return &pagination{isValid: false}
+		return &Pagination{isValid: false}
 	}
 
 	query := strings.Split(params[1], "=")
+	queryData := strings.Split(params[2], "=")
+
 	for _, q := range querys {
 		if isGood := strings.Compare(q, query[1]); isGood == 0 {
-			return &pagination{
-				isValid: true,
-				query:   query[1],
-				page:    i,
+			return &Pagination{
+				isValid:   true,
+				query:     q,
+				queryData: queryData[1],
+				page:      i,
 			}
 		}
 	}
 
-	return &pagination{isValid: false}
+	return &Pagination{isValid: false}
 }
 
 func marketParser(m models.Market) (string, error) {
@@ -112,6 +116,17 @@ func massegaConstructor(message *tgbotapi.Message, text string) *tgbotapi.Messag
 	return &msg
 }
 
+func parseQuery(query []string) string {
+	if len(query) == 1 {
+		return query[0]
+	}
+
+	if len(query) == 2 {
+		return query[0] + "_" + query[1]
+	}
+	return ""
+}
+
 func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboardMarkup {
 	param := strings.Split(text, " ")
 	switch param[0] {
@@ -146,11 +161,11 @@ func (b *Bot) unknownMessage(message *tgbotapi.Message) error {
 	return b.sendMessage(&msg)
 }
 
-func (b *Bot) paginationMessage(message *tgbotapi.Message, p *pagination) error {
+func (b *Bot) paginationMessage(message *tgbotapi.Message, p *Pagination) error {
 	msg := massegaConstructor(message, "Touch to see next markets")
 	msg.ReplyMarkup = inlineKeyBoardConstructor(
 		fmt.Sprintf("next page %d", p.page+1),
-		fmt.Sprintf("page=%d,query=%s", p.page+1, p.query),
+		fmt.Sprintf("page=%d,query=%s,queryData=%s", p.page+1, p.query, p.queryData),
 	)
 	return b.sendMessage(msg)
 }

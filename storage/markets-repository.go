@@ -40,6 +40,58 @@ func (st *Storage) GetAllMarkets(page int) (*MarketResponse, error) {
 	return &response, nil
 }
 
+func (st *Storage) FindMarketsWithGeoParams(query string, data string, page int) (*MarketResponse, error) {
+	var response MarketResponse
+
+	switch query {
+	case "location":
+		result := st.db.
+			Where(&models.Market{
+				Location: data,
+			}).
+			Limit(pageSize).
+			Offset(pageSize * (page - 1)).
+			Find(&markets)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+		response.Markets = markets
+		response.Count = int(result.RowsAffected)
+
+	case "country":
+		result := st.db.
+			Where(&models.Market{
+				Country: data,
+			}).
+			Limit(pageSize).
+			Offset(pageSize * (page - 1)).
+			Find(&markets)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+		response.Markets = markets
+		response.Count = int(result.RowsAffected)
+
+	case "city":
+		result := st.db.
+			Where(&models.Market{
+				City: data,
+			}).
+			Limit(pageSize).
+			Offset(pageSize * (page - 1)).
+			Find(&markets)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+		response.Markets = markets
+		response.Count = int(result.RowsAffected)
+	}
+	return &response, nil
+}
+
 func (st *Storage) FindMarketsWithParam(param string) (*[]string, error) {
 	result := st.db.
 		Model(&models.Market{}).

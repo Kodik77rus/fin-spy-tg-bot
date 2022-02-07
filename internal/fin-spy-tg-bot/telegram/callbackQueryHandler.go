@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+
 	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/models"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
@@ -34,7 +35,6 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 		return b.setUserLanguage(cb, b.config.EnDictionary)
 	case page:
 		params := strings.Split(cb.Data, ",")
-
 		p := paginationParser(params)
 		if !p.isValid {
 			msg := massegaConstructor(cb.Message, "Bad query")
@@ -56,7 +56,27 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 				b.sendMessage(msg)
 			}
 			return b.paginationMessage(cb.Message, p)
+		case "location", "country", "city":
+			markets, _ := b.storage.FindMarketsWithGeoParams(p.query, p.queryData, p.page)
+			if markets.Count == 0 {
+				msg := massegaConstructor(cb.Message, "you see all markets")
+				b.sendMessage(msg)
+				return nil
+			}
+
+			for _, m := range markets.Markets {
+				msg := massegaConstructor(cb.Message, *textParser(m))
+				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
+				b.sendMessage(msg)
+			}
+
+			if markets.Count == 1 {
+				return nil
+			}
+
+			return b.paginationMessage(cb.Message, p)
 		}
+
 	default:
 		return b.unknownMessage(cb.Message)
 	}
