@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/models"
+	"github.com/Kodik77rus/fin-spy-tg-bot/storage"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -153,6 +154,15 @@ func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboar
 		)
 		return &keyBoard
 	}
+}
+
+func (b *Bot) sendMarkets(message *tgbotapi.Message, markets *storage.MarketResponse) error {
+	for _, m := range markets.Markets {
+		msg := massegaConstructor(message, *textParser(m))
+		msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
+		b.sendMessage(msg)
+	}
+	return nil
 }
 
 //Send default message for unknown command

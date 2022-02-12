@@ -71,11 +71,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 
 			markets, _ := b.storage.GetAllMarkets(1) //firts page
 
-			for _, m := range markets.Markets {
-				msg := massegaConstructor(message, *textParser(m))
-				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
-				b.sendMessage(msg)
-			}
+			b.sendMarkets(message, markets)
 
 			pagination.page = 1
 			pagination.query = "all_markets"
@@ -95,11 +91,7 @@ func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
 				return nil
 			}
 
-			for _, m := range markets.Markets {
-				msg := massegaConstructor(message, *textParser(m))
-				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
-				b.sendMessage(msg)
-			}
+			b.sendMarkets(message, markets)
 
 			if markets.Count == 1 {
 				return nil

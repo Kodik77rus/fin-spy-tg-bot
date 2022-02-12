@@ -49,12 +49,7 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 				return b.sendMessage(msg)
 			}
 
-			for _, m := range markets.Markets {
-				msg := massegaConstructor(cb.Message, *textParser(m))
-				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
-
-				b.sendMessage(msg)
-			}
+			b.sendMarkets(cb.Message, markets)
 			return b.paginationMessage(cb.Message, p)
 		case "location", "country", "city":
 			markets, _ := b.storage.FindMarketsWithGeoParams(p.query, p.queryData, p.page)
@@ -64,11 +59,7 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 				return nil
 			}
 
-			for _, m := range markets.Markets {
-				msg := massegaConstructor(cb.Message, *textParser(m))
-				msg.ReplyMarkup = inlineKeyBoardConstructor("info", m.Hour)
-				b.sendMessage(msg)
-			}
+			b.sendMarkets(cb.Message, markets)
 
 			if markets.Count == 1 {
 				return nil
