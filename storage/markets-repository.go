@@ -40,10 +40,25 @@ func (st *Storage) GetAllMarkets(page int) (*MarketResponse, error) {
 	return &response, nil
 }
 
-func (st *Storage) FindMarketsWithGeoParams(query string, data string, page int) (*MarketResponse, error) {
+// Limit(1).Find(&, name)
+
+func (st *Storage) FindMarketsWithParams(query string, data string, page int) (*MarketResponse, error) {
 	var response MarketResponse
 
 	switch query {
+	case "info":
+		result := st.db.
+			Where(&models.Market{
+				Name: data,
+			}).
+			Find(&markets)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+		response.Markets = markets
+		response.Count = int(result.RowsAffected)
+
 	case "location":
 		result := st.db.
 			Where(&models.Market{
@@ -92,12 +107,29 @@ func (st *Storage) FindMarketsWithGeoParams(query string, data string, page int)
 	return &response, nil
 }
 
-func (st *Storage) FindMarketsWithParam(param string) (*[]string, error) {
+func (st *Storage) SortedMarketList(param string) (*[]string, error) {
+	if param == "markets" {
+		param = "name"
+	}
+
+	if param == "locations" {
+		param = "location"
+	}
+
+	if param == "countries" {
+		param = "country"
+	}
+
+	if param == "cities" {
+		param = "city"
+	}
+
 	result := st.db.
 		Model(&models.Market{}).
 		Distinct().
 		Order(param+" asc").
 		Pluck(param, &market)
+
 	if result.Error != nil {
 		return nil, result.Error
 	}

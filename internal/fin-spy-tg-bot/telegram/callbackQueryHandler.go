@@ -43,29 +43,12 @@ func (b *Bot) callbackQueryHandler(cb *tgbotapi.CallbackQuery) error {
 
 		switch p.query {
 		case "all_markets":
-			markets, _ := b.storage.GetAllMarkets(p.page + 1) //next page
-			if markets.Count == 0 {
-				msg := massegaConstructor(cb.Message, "You watched all markets!")
-				return b.sendMessage(msg)
-			}
-
-			b.sendMarkets(cb.Message, markets)
-			return b.paginationMessage(cb.Message, p)
+		case "market":
+			return b.sendAllMarkets(cb.Message, p.page) //next page
 		case "location", "country", "city":
-			markets, _ := b.storage.FindMarketsWithGeoParams(p.query, p.queryData, p.page)
-			if markets.Count == 0 {
-				msg := massegaConstructor(cb.Message, "you see all markets")
-				b.sendMessage(msg)
-				return nil
-			}
-
-			b.sendMarkets(cb.Message, markets)
-
-			if markets.Count == 1 {
-				return nil
-			}
-
-			return b.paginationMessage(cb.Message, p)
+			return b.FindMarketsWithParams(cb.Message, p)
+		default:
+			return b.unknownMessage(cb.Message)
 		}
 
 	default:

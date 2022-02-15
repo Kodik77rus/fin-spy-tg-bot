@@ -12,13 +12,23 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var querys = [4]string{"all_markets", "location", "country", "city"}
+var querys = [5]string{"market", "location", "country", "city", "info"}
 
-type Pagination struct {
+type pagination struct {
 	isValid   bool
 	query     string
 	queryData string
 	page      int
+}
+
+type command struct {
+	name  string
+	flag  string
+	param []string
+}
+
+type market struct {
+	market *[]string
 }
 
 type location struct {
@@ -41,25 +51,24 @@ func textParser(i interface{}) *string {
 			panic(err)
 		}
 		return &txt
+	case market:
+		return marketListParser(i.market, "info")
 	case location:
-		txt := geoParser(i.location, "location")
-		return txt
+		return marketListParser(i.location, "location")
 	case country:
-		txt := geoParser(i.country, "country")
-		return txt
+		return marketListParser(i.country, "country")
 	case city:
-		txt := geoParser(i.city, "city")
-		return txt
+		return marketListParser(i.city, "city")
 	}
 	return nil
 }
 
-func paginationParser(params []string) *Pagination {
+func paginationParser(params []string) *pagination {
 	pageNumber := strings.Split(params[0], "=")
 
 	i, err := strconv.Atoi(pageNumber[1])
 	if err != nil {
-		return &Pagination{isValid: false}
+		return &pagination{isValid: false}
 	}
 
 	query := strings.Split(params[1], "=")
@@ -67,7 +76,7 @@ func paginationParser(params []string) *Pagination {
 
 	for _, q := range querys {
 		if isGood := strings.Compare(q, query[1]); isGood == 0 {
-			return &Pagination{
+			return &pagination{
 				isValid:   true,
 				query:     q,
 				queryData: queryData[1],
@@ -76,12 +85,13 @@ func paginationParser(params []string) *Pagination {
 		}
 	}
 
-	return &Pagination{isValid: false}
+	return &pagination{isValid: false}
 }
 
 func marketParser(m models.Market) (string, error) {
 	var buf bytes.Buffer
 
+	m.Name = replaceStr(m.Name)
 	ut, err := template.New("market").
 		Parse(
 			"Name: {{ .Name }}\n" +
@@ -104,28 +114,24 @@ func marketParser(m models.Market) (string, error) {
 	return buf.String(), nil
 }
 
-func geoParser(location *[]string, param string) *string {
+func marketListParser(location *[]string, param string) *string {
 	str := new(string)
 	for _, c := range *location {
-		*str += fmt.Sprintf("%s:\n/markets_show_%s_%s\n", c, param, c)
+		*str += fmt.Sprintf("%s:\n/market_show_%s_%s\n", replaceStr(c), param, c)
 	}
 	return str
 }
 
+func commandValidation(c []string) *command {
+	return &command{
+		name:  c[0],
+		flag:  c[1],
+		param: c[2:],
+	}
+}
 func massegaConstructor(message *tgbotapi.Message, text string) *tgbotapi.MessageConfig {
 	msg := tgbotapi.NewMessage(message.Chat.ID, text)
 	return &msg
-}
-
-func parseQuery(query []string) string {
-	if len(query) == 1 {
-		return query[0]
-	}
-
-	if len(query) == 2 {
-		return query[0] + "_" + query[1]
-	}
-	return ""
 }
 
 func inlineKeyBoardConstructor(text string, data string) *tgbotapi.InlineKeyboardMarkup {
@@ -171,7 +177,7 @@ func (b *Bot) unknownMessage(message *tgbotapi.Message) error {
 	return b.sendMessage(&msg)
 }
 
-func (b *Bot) paginationMessage(message *tgbotapi.Message, p *Pagination) error {
+func (b *Bot) paginationMessage(message *tgbotapi.Message, p *pagination) error {
 	msg := massegaConstructor(message, "Touch to see next markets")
 	msg.ReplyMarkup = inlineKeyBoardConstructor(
 		fmt.Sprintf("next page %d", p.page+1),
@@ -196,4 +202,63 @@ func (b *Bot) sendMessage(msg *tgbotapi.MessageConfig) error {
 		panic(err)
 	}
 	return nil
+}
+
+func (b *Bot) sendAllMarkets(message *tgbotapi.Message, page int) error {
+	markets, err := b.storage.GetAllMarkets(page)
+	if err != nil {
+		return err
+	}
+
+	if markets.Count == 0 {
+		msg := massegaConstructor(message, "You watched all markets!")
+		return b.sendMessage(msg)
+	}
+
+	var p pagination
+
+	b.sendMarkets(message, markets)
+
+	p.page = page
+	p.query = "market"
+	p.queryData = "all"
+	return b.paginationMessage(message, &p)
+}
+
+func (b *Bot) FindMarketsWithParams(message *tgbotapi.Message, p *pagination) error {
+	markets, _ := b.storage.FindMarketsWithParams(p.query, p.queryData, p.page)
+	fmt.Println(markets.Count)
+	if markets.Count == 0 {
+		msg := massegaConstructor(message, "you see all markets")
+		b.sendMessage(msg)
+		return nil
+	}
+
+	b.sendMarkets(message, markets)
+
+	if markets.Count == 1 {
+		return nil
+	}
+
+	return b.paginationMessage(message, p)
+}
+
+func replaceStr(s string) string {
+	return strings.ReplaceAll(s, "_", " ")
+}
+
+func concatenateStr(s []string) string {
+	var str strings.Builder
+
+	arrLen := len(s)
+
+	for i, e := range s {
+		if i == arrLen-1 {
+			str.WriteString(e)
+			continue
+		}
+		str.WriteString(e + "_")
+	}
+
+	return str.String()
 }

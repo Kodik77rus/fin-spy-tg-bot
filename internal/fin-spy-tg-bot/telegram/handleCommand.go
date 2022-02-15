@@ -9,8 +9,10 @@ import (
 
 const (
 	//commands
+
 	commandStart  = "start"
-	commandMarket = "markets"
+	commandMarket = "market"
+
 	// commandWhatch     = "whatch"
 	// commandDelete     = "delete"
 	// commandWhatchList = "whatchlist"
@@ -18,15 +20,39 @@ const (
 
 )
 
+var p pagination
+
 //Handle commands
 func (b *Bot) handleCommand(message *tgbotapi.Message) error {
-	command := strings.Split(message.Command(), "_")
+	command := commandValidation(strings.Split(message.Command(), "_"))
 
-	switch command[0] {
+	switch command.name {
 	case commandStart:
 		return b.startCommand(message)
 	case commandMarket:
-		return b.marketCommand(message, command[1:])
+		switch command.flag {
+		case "show":
+			if len(command.param) == 0 {
+				return b.unknownMessage(message)
+			}
+
+			switch command.param[0] {
+			case "all":
+				return b.sendAllMarkets(message, 1) //firts page
+			case "list":
+				return b.sendSortedMarketsList(message, command.param[1])
+			case "location", "country", "city", "info":
+				p.page = 1
+				p.query = command.param[0]
+				p.queryData = concatenateStr(command.param[1:])
+
+				return b.FindMarketsWithParams(message, &p)
+			default:
+				return b.unknownMessage(message)
+			}
+		default:
+			return b.unknownMessage(message)
+		}
 	default:
 		return b.unknownMessage(message)
 	}
@@ -46,63 +72,6 @@ func (b *Bot) startCommand(message *tgbotapi.Message) error {
 		return b.createUser(message, b.config.EnDictionary)
 	default:
 		return b.chooseLanguageMessage(message, b.config.EnDictionary)
-	}
-}
-
-func (b *Bot) marketCommand(message *tgbotapi.Message, flags []string) error {
-	switch flags[0] {
-	case "show":
-		if len(flags) == 3 && flags[1] == "all" {
-			switch flags[2] {
-			case "locations":
-				return b.findMarketsWithParam(message, "location")
-			case "countries":
-				return b.findMarketsWithParam(message, "country")
-			case "cities":
-				return b.findMarketsWithParam(message, "city")
-			default:
-				return b.unknownMessage(message)
-			}
-		}
-
-		switch flags[1] {
-		case "all":
-			var pagination Pagination
-
-			markets, _ := b.storage.GetAllMarkets(1) //firts page
-
-			b.sendMarkets(message, markets)
-
-			pagination.page = 1
-			pagination.query = "all_markets"
-
-			return b.paginationMessage(message, &pagination)
-		case "location", "country", "city":
-			var p Pagination
-
-			p.page = 1
-			p.query = flags[1]
-			p.queryData = parseQuery(flags[2:])
-
-			markets, _ := b.storage.FindMarketsWithGeoParams(p.query, p.queryData, 1)
-			if markets.Count == 0 {
-				msg := massegaConstructor(message, "Markets not found")
-				b.sendMessage(msg)
-				return nil
-			}
-
-			b.sendMarkets(message, markets)
-
-			if markets.Count == 1 {
-				return nil
-			}
-
-			return b.paginationMessage(message, &p)
-		default:
-			return b.unknownMessage(message)
-		}
-	default:
-		return b.unknownMessage(message)
 	}
 }
 
@@ -131,36 +100,42 @@ func (b *Bot) createUser(message *tgbotapi.Message, dictionary interface{}) erro
 	return nil
 }
 
-func (b *Bot) findMarketsWithParam(message *tgbotapi.Message, param string) error {
-	res, err := b.storage.FindMarketsWithParam(param)
+func (b *Bot) sendSortedMarketsList(message *tgbotapi.Message, param string) error {
+	res, err := b.storage.SortedMarketList(param)
 	if err != nil {
 		return err
 	}
 
 	switch param {
-	case "location":
-		var location location
+	case "markets":
+		var m market
 
-		location.location = res
+		m.market = res
 
-		msg := massegaConstructor(message, *textParser(location))
+		msg := massegaConstructor(message, *textParser(m))
 		return b.sendMessage(msg)
-	case "country":
-		var country country
+	case "locations":
+		var l location
 
-		country.country = res
+		l.location = res
 
-		msg := massegaConstructor(message, *textParser(country))
+		msg := massegaConstructor(message, *textParser(l))
 		return b.sendMessage(msg)
-	case "city":
-		var city city
+	case "countries":
+		var c country
 
-		city.city = res
+		c.country = res
 
-		msg := massegaConstructor(message, *textParser(city))
+		msg := massegaConstructor(message, *textParser(c))
 		return b.sendMessage(msg)
-	default:
-		b.unknownMessage(message)
+	case "cities":
+		var c city
+
+		c.city = res
+
+		msg := massegaConstructor(message, *textParser(c))
+		return b.sendMessage(msg)
 	}
+
 	return nil
 }
