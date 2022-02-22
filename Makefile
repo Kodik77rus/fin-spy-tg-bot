@@ -2,4 +2,4 @@
 .SILENT:
 
 build:
-	go mod download && CGO_ENABLED=0 go build -o ./bin ./cmd/fin-spy-tg-bot && ./bin -path ./configs/app.toml
+	go mod tidy && CGO_ENABLED=0 GOOS=linux go build -o ./bin ./cmd/fin-spy-tg-bot && ./bin
