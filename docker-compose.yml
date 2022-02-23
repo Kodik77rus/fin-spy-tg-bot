@@ -1,8 +1,12 @@
 version: '3.4'
 
 services:
-  finspytgbot:
-    image: finspytgbot
+  tg-bot:
+    environment:
+      DB_URL: $DB_URL
+      LOG_LVL: $LOG_LVL
+      TG_BOT: $TG_BOT
+    image: tg-bot
     restart: always
     build:
       context: .
@@ -14,9 +18,9 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_DB: $POSTGRES_DB
     ports:
       - 5432:5432
     volumes:

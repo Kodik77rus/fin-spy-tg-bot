@@ -9,25 +9,15 @@ import (
 )
 
 func init() {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		logrus.Warn("No .env file found, trying to create file")
 
-		file, err := os.Open(".env.example")
-		if err != nil {
-			logrus.Fatal("no config file")
-		}
+		env := [3]string{"TG_BOT", "LOG_LVL", "DB_URL"}
 
-		env, err := godotenv.Parse(file)
-		if err != nil {
-			logrus.Fatal("can't parse file")
-		}
-
-		if err := godotenv.Write(env, ".env"); err != nil {
-			logrus.Fatal("can't write file")
-		}
-
-		if err := godotenv.Load(); err != nil {
-			logrus.Fatal(err)
+		for _, i := range env {
+			if _, exists := os.LookupEnv(i); !exists {
+				logrus.Fatal("No .env var")
+			}
 		}
 	}
 }
@@ -43,5 +33,4 @@ func main() {
 	if err := server.Start(); err != nil {
 		os.Exit(1)
 	}
-
 }

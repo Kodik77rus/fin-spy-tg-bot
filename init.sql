@@ -1,4 +1,4 @@
-CREATE TABLE marktes 
+CREATE TABLE markets 
 (
   name text, 
   code text not null,
