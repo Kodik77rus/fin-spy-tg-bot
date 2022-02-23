@@ -123,12 +123,26 @@ func marketListParser(location *[]string, param string) *string {
 }
 
 func commandValidation(c []string) *command {
-	return &command{
-		name:  c[0],
-		flag:  c[1],
-		param: c[2:],
+	l := len(c)
+	switch l {
+	case 1:
+		return &command{
+			name: c[0],
+		}
+	case 2:
+		return &command{
+			name: c[0],
+			flag: c[1],
+		}
+	default:
+		return &command{
+			name:  c[0],
+			flag:  c[1],
+			param: c[2:],
+		}
 	}
 }
+
 func massegaConstructor(message *tgbotapi.Message, text string) *tgbotapi.MessageConfig {
 	msg := tgbotapi.NewMessage(message.Chat.ID, text)
 	return &msg
