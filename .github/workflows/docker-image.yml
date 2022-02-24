@@ -45,6 +45,6 @@ jobs:
             # Stop running container
             cd ~/bot/fin-spy-tg-bot && docker-compose stop
             # Remove old container
-            docker rmi myimage:tag && docker rm CONTAINER_NAME fin-spy-tg-bot_tg-bot_1
+            docker rmi tg-bot:tag && docker rm fin-spy-tg-bot_tg-bot_1
             # Run a new container from a new image
             docker-compose up
