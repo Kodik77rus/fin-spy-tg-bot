@@ -54,7 +54,7 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 			return b.unknownMessage(message)
 		}
 	case "info":
-		msg := massegaConstructor(message, "hi")
+		msg := massegaConstructor(message, "hiii")
 		return b.sendMessage(msg)
 	default:
 		return b.unknownMessage(message)
