@@ -21,5 +21,3 @@ WORKDIR /
 COPY --from=builder /app/bot /bot
 
 ENTRYPOINT ["/bot"]
-
-LABEL Name=tg-bot Version=0.0.1

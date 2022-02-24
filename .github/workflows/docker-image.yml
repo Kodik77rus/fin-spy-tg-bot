@@ -32,6 +32,27 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/tg-bot:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/tg-bot:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/tg-bot:buildcache,mode=max
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_CONTAINER }}:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_CONTAINER }}buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_CONTAINER }}:buildcache,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_push
+
+    steps:
+      - name: Deploy to  via SSH action
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.HOST_NAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # Download latest bot version
+            docker pull kodik77rus/tg-bot:latest
+            # Stop running container
+            cd ~/bot/fin-spy-tg-bot && docker-compose stop
+            # Remove old container
+            docker rmi myimage:tag && docker rm CONTAINER_NAME fin-spy-tg-bot_tg-bot_1
+            # Run a new container from a new image
+           docker-compose up
