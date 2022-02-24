@@ -2,31 +2,25 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-      -
-        name: Checkout 
+      - name: Checkout
         uses: actions/checkout@v2
-      -
-        name: Login to Docker Hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -35,18 +29,16 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_CONTAINER }}:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_CONTAINER }}buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_CONTAINER }}:buildcache,mode=max
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build_and_push
 
     steps:
-      - name: Deploy to  via SSH action
+      - name: Deploy to via SSH action
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.HOST_NAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          password: ${{ secrets.HOST_PWD }}
           script: |
             # Download latest bot version
             docker pull kodik77rus/tg-bot:latest
@@ -55,4 +47,4 @@ jobs:
             # Remove old container
             docker rmi myimage:tag && docker rm CONTAINER_NAME fin-spy-tg-bot_tg-bot_1
             # Run a new container from a new image
-           docker-compose up
+            docker-compose up
