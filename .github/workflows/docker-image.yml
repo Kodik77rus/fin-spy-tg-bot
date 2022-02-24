@@ -42,12 +42,7 @@ jobs:
           password: ${{ secrets.HOST_PWD }}
           script: |
             # Download latest bot version
-            docker pull kodik77rus/tg-bot:latest
-            # Stop running container
-            cd ~/bot/fin-spy-tg-bot && docker-compose stop
-            # Remove old container
-            docker rmi tg-bot:tag && docker rm fin-spy-tg-bot_tg-bot_1
-            # Update git hub repo
-            git pull
-            # Run a new container from a new image
+            cd ~/bot/fin-spy-tg-bot
+            docker-compose down
+            docker-compose pull
             docker-compose up -d
