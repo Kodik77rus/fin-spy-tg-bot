@@ -47,5 +47,7 @@ jobs:
             cd ~/bot/fin-spy-tg-bot && docker-compose stop
             # Remove old container
             docker rmi tg-bot:tag && docker rm fin-spy-tg-bot_tg-bot_1
+            # Update git hub repo
+            git pull
             # Run a new container from a new image
             docker-compose up -d
