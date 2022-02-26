@@ -92,6 +92,8 @@ func marketParser(m models.Market) (string, error) {
 	var buf bytes.Buffer
 
 	m.Name = replaceStr(m.Name)
+	m.City = replaceStr(m.City)
+
 	ut, err := template.New("market").
 		Parse(
 			"Name: {{ .Name }}\n" +
@@ -241,7 +243,6 @@ func (b *Bot) sendAllMarkets(message *tgbotapi.Message, page int) error {
 
 func (b *Bot) FindMarketsWithParams(message *tgbotapi.Message, p *pagination) error {
 	markets, _ := b.storage.FindMarketsWithParams(p.query, p.queryData, p.page)
-	fmt.Println(markets.Count)
 	if markets.Count == 0 {
 		msg := massegaConstructor(message, "you see all markets")
 		b.sendMessage(msg)
