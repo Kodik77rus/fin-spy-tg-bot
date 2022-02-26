@@ -12,7 +12,7 @@ func init() {
 	if err := godotenv.Load(".env"); err != nil {
 		logrus.Warn("No .env file found, trying to create file")
 
-		env := [3]string{"TG_BOT", "LOG_LVL", "DB_URL"}
+		env := [4]string{"TG_BOT", "LOG_LVL", "DB_URL", "FIN_HUB"}
 
 		for _, i := range env {
 			if _, exists := os.LookupEnv(i); !exists {
@@ -26,7 +26,7 @@ func main() {
 	//create base config
 	config := app.NewConfig()
 
-	//set config from toml file
+	//set config from .env file
 	server := app.New(config)
 
 	//app server start

@@ -6,11 +6,12 @@ import (
 	"github.com/Kodik77rus/fin-spy-tg-bot/storage"
 )
 
-//Default config instance of app server
+//Default config instance of app
 type Config struct {
 	TgBot       string //Tg Token
 	LoggerLevel string
 	DatabaseURL string
+	FinhubToken string
 	Storage     *storage.Config //DB instance
 }
 
@@ -18,9 +19,10 @@ type Config struct {
 func NewConfig() *Config {
 	return &Config{
 		TgBot:       getEnv("TG_BOT", ""),
+		Storage:     storage.NewConfig(),
 		LoggerLevel: getEnv("LOG_LVL", "debug"),
 		DatabaseURL: getEnv("DB_URL", ""),
-		Storage:     storage.NewConfig(),
+		FinhubToken: getEnv("FIN_HUB", ""),
 	}
 }
 

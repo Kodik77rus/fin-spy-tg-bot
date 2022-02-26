@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/cron"
 	"github.com/Kodik77rus/fin-spy-tg-bot/internal/fin-spy-tg-bot/telegram"
 	"github.com/Kodik77rus/fin-spy-tg-bot/storage"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -41,7 +42,9 @@ func (app *APP) setTgBotApp() error {
 
 	bot.Debug = true
 
-	app.bot = telegram.New(bot, app.storage)
+	crn := cron.New(app.config.FinhubToken)
+
+	app.bot = telegram.New(bot, app.storage, crn)
 
 	return nil
 }
