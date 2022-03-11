@@ -42,7 +42,7 @@ func (app *APP) setTgBotApp() error {
 
 	bot.Debug = true
 
-	crn := cron.New(app.config.FinhubToken)
+	crn := cron.New(app.config.FinhubToken, app.storage, app.logger)
 
 	app.bot = telegram.New(bot, app.storage, crn)
 

@@ -221,7 +221,7 @@ func (b *Bot) sendMessage(msg *tgbotapi.MessageConfig) error {
 }
 
 func (b *Bot) sendAllMarkets(message *tgbotapi.Message, page int) error {
-	markets, err := b.storage.GetAllMarkets(page)
+	markets, err := b.storage.GetAllMarketsWithPagination(page)
 	if err != nil {
 		return err
 	}

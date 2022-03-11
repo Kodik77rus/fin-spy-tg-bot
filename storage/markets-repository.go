@@ -14,7 +14,15 @@ type MarketResponse struct {
 	Count   int
 }
 
-func (st *Storage) GetAllMarkets(page int) (*MarketResponse, error) {
+func (st *Storage) GetAllMarkets() (*[]models.Market, error) {
+	result := st.db.Find(&markets)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &markets, nil
+}
+
+func (st *Storage) GetAllMarketsWithPagination(page int) (*MarketResponse, error) {
 	result := st.db.
 		Select(
 			"name",

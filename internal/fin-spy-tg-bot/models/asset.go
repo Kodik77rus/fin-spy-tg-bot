@@ -19,5 +19,5 @@ type Asset struct {
 	Sector         string `json:"sector"`
 	Industry       string `json:"industry"`
 	Website        string `json:"website"`
-	IsWatch        bool   `json:"isWatch"`
+	IsWatch        bool
 }
